@@ -1,36 +1,49 @@
+"use client"
 import DateReserve from "@/components/DateReserve"
-import { getServerSession } from "next-auth"
-import getUserProfile from "@/libs/getUserProfile"
-import { authOptions } from "../api/auth/[...nextauth]/authOptions"
+import { useState } from "react"
+import { Dayjs } from "dayjs"
+import { useDispatch } from "react-redux"
+import { AppDispatch } from "@/redux/store"
+import { addBooking } from "@/redux/features/bookSlice"
+import { BookingItem } from "../../../interface"
+import dayjs from "dayjs"
 
-export default async function Booking() {
 
-  const session = await getServerSession(authOptions)
-  if (!session || !session.user.token) return null
+export default function Booking() {
 
-  const profile = await getUserProfile(session.user.token)
-  const createdAt = new Date(profile.data.createdAt)
+  const dispatch = useDispatch<AppDispatch>()
+
+  const makeReservation = ()=>{
+    if(nameLastName && tel && venue && reserveDate) {
+      const item: BookingItem = {
+        nameLastname: nameLastName,
+        tel: tel,
+        venue: venue,
+        bookDate: dayjs(reserveDate).format("YYYY/MM/DD")
+      }
+      dispatch(addBooking(item))
+    }
+  }
+
+  const [nameLastName, setNameLastName] = useState("")
+  const [tel, setTel] = useState("")
+  const [reserveDate, setReserveDate] = useState<Dayjs|null>(null)
+  const [venue, setVenue] = useState("")
 
   return(
-    <main className="w-[100%] flex flex-col items-center space-y-4">
-      <div className="bg-slate-100 rounded-lg w-fit px-10 py-6 flex flex-col gap-y-4">
-        <div className="text-2xl">{profile.data.name}</div>
-        <table className="table-auto border-separate border-spacing-2"><tbody>
-          <tr><td>Email</td><td>{profile.data.email}</td></tr>
-          <tr><td>Tel.</td><td>{profile.data.tel}</td></tr>
-          <tr><td>Member since</td><td>{createdAt.toString()}</td></tr>
-        </tbody></table>
-      </div>
-      
-
-      <div className="text-xl font-medium pt-3">Venue Booking</div>
-      
+    <main className="w-[100%] flex flex-col items-center space-y-4"> 
+      <div className="text-xl font-medium pt-3">Venue Booking</div>     
       <div className="w-fit space-y-2">
         <div className="text-md text-left text-gray-600">Date and Venue</div>
-        <DateReserve/>
+        <DateReserve
+        onNameChange={(value: string)=>{setNameLastName(value)}}
+        onTelChange={(value: string) => {setTel(value)}}
+        onDateChange={(value: Dayjs | null) => {setReserveDate(value)}}
+        onVenueChange={(value: string) => {setVenue(value)}}/>
       </div>
 
-      <button name="Book Venue" className="block rounded-md bg-sky-600 hover:bg-indigo-600 px-3 py-2 text-white shadow-sm">
+      <button name="Book Venue" className="block rounded-md bg-sky-600 hover:bg-indigo-600 px-3 py-2 text-white shadow-sm"
+      onClick={makeReservation}>
         Book Venue
       </button>
 
